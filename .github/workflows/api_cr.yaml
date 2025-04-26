@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-docker-image:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -22,7 +22,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -44,3 +43,52 @@ jobs:
             GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
             GITHUB_REPOSITORY=${{ github.repository }}
             GITHUB_SHA=${{ github.sha }}
+  build-infra:
+    runs-on: ubuntu-latest
+    needs: build-docker-image
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # - name: Set up Azure CLI
+      #   uses: azure/setup-cli@v1
+
+      # - name: Login to Azure
+      #   uses: azure/login@v1
+      #   with:
+      #     creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # - name: Deploy infrastructure using Bicep
+      #   id: deploy-infra
+      #   uses: azure/arm-deploy@v1
+      #   with:
+      #     resource-group-name: 'mlflowcloud'
+      #     template: './infrastructure/bicep/main.bicep'
+      #     parameters: './infrastructure/bicep/parameters.json'
+      #     deployment-name: 'mlflowcloud-deployment'
+      #     location: 'westeurope'
+  
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   needs: build
+  #   environment:
+  #     name: 'Production'
+  #     url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+  #   steps:
+  #     - name: update Azure Web App settings
+  #       uses: azure/appservice-settings@v1
+  #       with:
+  #         app-name: 'gilsamamlflow'
+  #         slot-name: 'Production'  # Optional and needed only if the settings have to be configured on the specific deployment slot
+  #         app-settings-json: '${{ secrets.MLFLOWCLOUD_APPSETTINGS }}' 
+  #         # connection-strings-json: '${{ secrets.CONNECTION_STRINGS }}'
+  #         # general-settings-json: '{"alwaysOn": "false", "webSocketsEnabled": "true"}' #'General configuration settings as Key Value pairs'
+  #     - name: Deploy to Azure Web App
+  #       id: deploy-to-webapp
+  #       uses: azure/webapps-deploy@v2
+  #       with:
+  #         app-name: 'gilsamamlflow'
+  #         slot-name: 'Production'
+  #         publish-profile: ${{ secrets.AzureAppService_PublishProfile_6df782e285cf4bb0b5d3dcafc7883458 }}
+  #         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}            
